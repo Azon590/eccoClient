@@ -1,14 +1,206 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+
 const API_URL = import.meta.env.VITE_API_URL;
+
+// Static countries list (already sorted)
+const countriesList = [
+  { name: "Afghanistan", code: "+93", flag: "https://flagcdn.com/w20/af.png" },
+  { name: "Albania", code: "+355", flag: "https://flagcdn.com/w20/al.png" },
+  { name: "Algeria", code: "+213", flag: "https://flagcdn.com/w20/dz.png" },
+  { name: "Andorra", code: "+376", flag: "https://flagcdn.com/w20/ad.png" },
+  { name: "Angola", code: "+244", flag: "https://flagcdn.com/w20/ao.png" },
+  { name: "Antigua and Barbuda", code: "+1", flag: "https://flagcdn.com/w20/ag.png" },
+  { name: "Argentina", code: "+54", flag: "https://flagcdn.com/w20/ar.png" },
+  { name: "Armenia", code: "+374", flag: "https://flagcdn.com/w20/am.png" },
+  { name: "Australia", code: "+61", flag: "https://flagcdn.com/w20/au.png" },
+  { name: "Austria", code: "+43", flag: "https://flagcdn.com/w20/at.png" },
+  { name: "Azerbaijan", code: "+994", flag: "https://flagcdn.com/w20/az.png" },
+  { name: "Bahamas", code: "+1", flag: "https://flagcdn.com/w20/bs.png" },
+  { name: "Bahrain", code: "+973", flag: "https://flagcdn.com/w20/bh.png" },
+  { name: "Bangladesh", code: "+880", flag: "https://flagcdn.com/w20/bd.png" },
+  { name: "Barbados", code: "+1", flag: "https://flagcdn.com/w20/bb.png" },
+  { name: "Belarus", code: "+375", flag: "https://flagcdn.com/w20/by.png" },
+  { name: "Belgium", code: "+32", flag: "https://flagcdn.com/w20/be.png" },
+  { name: "Belize", code: "+501", flag: "https://flagcdn.com/w20/bz.png" },
+  { name: "Benin", code: "+229", flag: "https://flagcdn.com/w20/bj.png" },
+  { name: "Bhutan", code: "+975", flag: "https://flagcdn.com/w20/bt.png" },
+  { name: "Bolivia", code: "+591", flag: "https://flagcdn.com/w20/bo.png" },
+  { name: "Bosnia and Herzegovina", code: "+387", flag: "https://flagcdn.com/w20/ba.png" },
+  { name: "Botswana", code: "+267", flag: "https://flagcdn.com/w20/bw.png" },
+  { name: "Brazil", code: "+55", flag: "https://flagcdn.com/w20/br.png" },
+  { name: "Brunei", code: "+673", flag: "https://flagcdn.com/w20/bn.png" },
+  { name: "Bulgaria", code: "+359", flag: "https://flagcdn.com/w20/bg.png" },
+  { name: "Burkina Faso", code: "+226", flag: "https://flagcdn.com/w20/bf.png" },
+  { name: "Burundi", code: "+257", flag: "https://flagcdn.com/w20/bi.png" },
+  { name: "Cambodia", code: "+855", flag: "https://flagcdn.com/w20/kh.png" },
+  { name: "Cameroon", code: "+237", flag: "https://flagcdn.com/w20/cm.png" },
+  { name: "Canada", code: "+1", flag: "https://flagcdn.com/w20/ca.png" },
+  { name: "Cape Verde", code: "+238", flag: "https://flagcdn.com/w20/cv.png" },
+  { name: "Central African Republic", code: "+236", flag: "https://flagcdn.com/w20/cf.png" },
+  { name: "Chad", code: "+235", flag: "https://flagcdn.com/w20/td.png" },
+  { name: "Chile", code: "+56", flag: "https://flagcdn.com/w20/cl.png" },
+  { name: "China", code: "+86", flag: "https://flagcdn.com/w20/cn.png" },
+  { name: "Colombia", code: "+57", flag: "https://flagcdn.com/w20/co.png" },
+  { name: "Comoros", code: "+269", flag: "https://flagcdn.com/w20/km.png" },
+  { name: "Congo", code: "+242", flag: "https://flagcdn.com/w20/cg.png" },
+  { name: "Costa Rica", code: "+506", flag: "https://flagcdn.com/w20/cr.png" },
+  { name: "Croatia", code: "+385", flag: "https://flagcdn.com/w20/hr.png" },
+  { name: "Cuba", code: "+53", flag: "https://flagcdn.com/w20/cu.png" },
+  { name: "Cyprus", code: "+357", flag: "https://flagcdn.com/w20/cy.png" },
+  { name: "Czech Republic", code: "+420", flag: "https://flagcdn.com/w20/cz.png" },
+  { name: "Denmark", code: "+45", flag: "https://flagcdn.com/w20/dk.png" },
+  { name: "Djibouti", code: "+253", flag: "https://flagcdn.com/w20/dj.png" },
+  { name: "Dominica", code: "+1", flag: "https://flagcdn.com/w20/dm.png" },
+  { name: "Dominican Republic", code: "+1", flag: "https://flagcdn.com/w20/do.png" },
+  { name: "Ecuador", code: "+593", flag: "https://flagcdn.com/w20/ec.png" },
+  { name: "Egypt", code: "+20", flag: "https://flagcdn.com/w20/eg.png" },
+  { name: "El Salvador", code: "+503", flag: "https://flagcdn.com/w20/sv.png" },
+  { name: "Equatorial Guinea", code: "+240", flag: "https://flagcdn.com/w20/gq.png" },
+  { name: "Eritrea", code: "+291", flag: "https://flagcdn.com/w20/er.png" },
+  { name: "Estonia", code: "+372", flag: "https://flagcdn.com/w20/ee.png" },
+  { name: "Ethiopia", code: "+251", flag: "https://flagcdn.com/w20/et.png" },
+  { name: "Fiji", code: "+679", flag: "https://flagcdn.com/w20/fj.png" },
+  { name: "Finland", code: "+358", flag: "https://flagcdn.com/w20/fi.png" },
+  { name: "France", code: "+33", flag: "https://flagcdn.com/w20/fr.png" },
+  { name: "Gabon", code: "+241", flag: "https://flagcdn.com/w20/ga.png" },
+  { name: "Gambia", code: "+220", flag: "https://flagcdn.com/w20/gm.png" },
+  { name: "Georgia", code: "+995", flag: "https://flagcdn.com/w20/ge.png" },
+  { name: "Germany", code: "+49", flag: "https://flagcdn.com/w20/de.png" },
+  { name: "Ghana", code: "+233", flag: "https://flagcdn.com/w20/gh.png" },
+  { name: "Greece", code: "+30", flag: "https://flagcdn.com/w20/gr.png" },
+  { name: "Grenada", code: "+1", flag: "https://flagcdn.com/w20/gd.png" },
+  { name: "Guatemala", code: "+502", flag: "https://flagcdn.com/w20/gt.png" },
+  { name: "Guinea", code: "+224", flag: "https://flagcdn.com/w20/gn.png" },
+  { name: "Guyana", code: "+592", flag: "https://flagcdn.com/w20/gy.png" },
+  { name: "Haiti", code: "+509", flag: "https://flagcdn.com/w20/ht.png" },
+  { name: "Honduras", code: "+504", flag: "https://flagcdn.com/w20/hn.png" },
+  { name: "Hungary", code: "+36", flag: "https://flagcdn.com/w20/hu.png" },
+  { name: "Iceland", code: "+354", flag: "https://flagcdn.com/w20/is.png" },
+  { name: "India", code: "+91", flag: "https://flagcdn.com/w20/in.png" },
+  { name: "Indonesia", code: "+62", flag: "https://flagcdn.com/w20/id.png" },
+  { name: "Iran", code: "+98", flag: "https://flagcdn.com/w20/ir.png" },
+  { name: "Iraq", code: "+964", flag: "https://flagcdn.com/w20/iq.png" },
+  { name: "Ireland", code: "+353", flag: "https://flagcdn.com/w20/ie.png" },
+  { name: "Israel", code: "+972", flag: "https://flagcdn.com/w20/il.png" },
+  { name: "Italy", code: "+39", flag: "https://flagcdn.com/w20/it.png" },
+  { name: "Jamaica", code: "+1", flag: "https://flagcdn.com/w20/jm.png" },
+  { name: "Japan", code: "+81", flag: "https://flagcdn.com/w20/jp.png" },
+  { name: "Jordan", code: "+962", flag: "https://flagcdn.com/w20/jo.png" },
+  { name: "Kazakhstan", code: "+7", flag: "https://flagcdn.com/w20/kz.png" },
+  { name: "Kenya", code: "+254", flag: "https://flagcdn.com/w20/ke.png" },
+  { name: "Kiribati", code: "+686", flag: "https://flagcdn.com/w20/ki.png" },
+  { name: "Kuwait", code: "+965", flag: "https://flagcdn.com/w20/kw.png" },
+  { name: "Kyrgyzstan", code: "+996", flag: "https://flagcdn.com/w20/kg.png" },
+  { name: "Laos", code: "+856", flag: "https://flagcdn.com/w20/la.png" },
+  { name: "Latvia", code: "+371", flag: "https://flagcdn.com/w20/lv.png" },
+  { name: "Lebanon", code: "+961", flag: "https://flagcdn.com/w20/lb.png" },
+  { name: "Lesotho", code: "+266", flag: "https://flagcdn.com/w20/ls.png" },
+  { name: "Liberia", code: "+231", flag: "https://flagcdn.com/w20/lr.png" },
+  { name: "Libya", code: "+218", flag: "https://flagcdn.com/w20/ly.png" },
+  { name: "Liechtenstein", code: "+423", flag: "https://flagcdn.com/w20/li.png" },
+  { name: "Lithuania", code: "+370", flag: "https://flagcdn.com/w20/lt.png" },
+  { name: "Luxembourg", code: "+352", flag: "https://flagcdn.com/w20/lu.png" },
+  { name: "Madagascar", code: "+261", flag: "https://flagcdn.com/w20/mg.png" },
+  { name: "Malawi", code: "+265", flag: "https://flagcdn.com/w20/mw.png" },
+  { name: "Malaysia", code: "+60", flag: "https://flagcdn.com/w20/my.png" },
+  { name: "Maldives", code: "+960", flag: "https://flagcdn.com/w20/mv.png" },
+  { name: "Mali", code: "+223", flag: "https://flagcdn.com/w20/ml.png" },
+  { name: "Malta", code: "+356", flag: "https://flagcdn.com/w20/mt.png" },
+  { name: "Mauritania", code: "+222", flag: "https://flagcdn.com/w20/mr.png" },
+  { name: "Mauritius", code: "+230", flag: "https://flagcdn.com/w20/mu.png" },
+  { name: "Mexico", code: "+52", flag: "https://flagcdn.com/w20/mx.png" },
+  { name: "Moldova", code: "+373", flag: "https://flagcdn.com/w20/md.png" },
+  { name: "Monaco", code: "+377", flag: "https://flagcdn.com/w20/mc.png" },
+  { name: "Mongolia", code: "+976", flag: "https://flagcdn.com/w20/mn.png" },
+  { name: "Montenegro", code: "+382", flag: "https://flagcdn.com/w20/me.png" },
+  { name: "Morocco", code: "+212", flag: "https://flagcdn.com/w20/ma.png" },
+  { name: "Mozambique", code: "+258", flag: "https://flagcdn.com/w20/mz.png" },
+  { name: "Myanmar", code: "+95", flag: "https://flagcdn.com/w20/mm.png" },
+  { name: "Namibia", code: "+264", flag: "https://flagcdn.com/w20/na.png" },
+  { name: "Nepal", code: "+977", flag: "https://flagcdn.com/w20/np.png" },
+  { name: "Netherlands", code: "+31", flag: "https://flagcdn.com/w20/nl.png" },
+  { name: "New Zealand", code: "+64", flag: "https://flagcdn.com/w20/nz.png" },
+  { name: "Nicaragua", code: "+505", flag: "https://flagcdn.com/w20/ni.png" },
+  { name: "Niger", code: "+227", flag: "https://flagcdn.com/w20/ne.png" },
+  { name: "Nigeria", code: "+234", flag: "https://flagcdn.com/w20/ng.png" },
+  { name: "North Korea", code: "+850", flag: "https://flagcdn.com/w20/kp.png" },
+  { name: "North Macedonia", code: "+389", flag: "https://flagcdn.com/w20/mk.png" },
+  { name: "Norway", code: "+47", flag: "https://flagcdn.com/w20/no.png" },
+  { name: "Oman", code: "+968", flag: "https://flagcdn.com/w20/om.png" },
+  { name: "Pakistan", code: "+92", flag: "https://flagcdn.com/w20/pk.png" },
+  { name: "Panama", code: "+507", flag: "https://flagcdn.com/w20/pa.png" },
+  { name: "Papua New Guinea", code: "+675", flag: "https://flagcdn.com/w20/pg.png" },
+  { name: "Paraguay", code: "+595", flag: "https://flagcdn.com/w20/py.png" },
+  { name: "Peru", code: "+51", flag: "https://flagcdn.com/w20/pe.png" },
+  { name: "Philippines", code: "+63", flag: "https://flagcdn.com/w20/ph.png" },
+  { name: "Poland", code: "+48", flag: "https://flagcdn.com/w20/pl.png" },
+  { name: "Portugal", code: "+351", flag: "https://flagcdn.com/w20/pt.png" },
+  { name: "Qatar", code: "+974", flag: "https://flagcdn.com/w20/qa.png" },
+  { name: "Romania", code: "+40", flag: "https://flagcdn.com/w20/ro.png" },
+  { name: "Russia", code: "+7", flag: "https://flagcdn.com/w20/ru.png" },
+  { name: "Rwanda", code: "+250", flag: "https://flagcdn.com/w20/rw.png" },
+  { name: "Saint Kitts and Nevis", code: "+1", flag: "https://flagcdn.com/w20/kn.png" },
+  { name: "Saint Lucia", code: "+1", flag: "https://flagcdn.com/w20/lc.png" },
+  { name: "Saint Vincent and the Grenadines", code: "+1", flag: "https://flagcdn.com/w20/vc.png" },
+  { name: "Samoa", code: "+685", flag: "https://flagcdn.com/w20/ws.png" },
+  { name: "San Marino", code: "+378", flag: "https://flagcdn.com/w20/sm.png" },
+  { name: "Saudi Arabia", code: "+966", flag: "https://flagcdn.com/w20/sa.png" },
+  { name: "Senegal", code: "+221", flag: "https://flagcdn.com/w20/sn.png" },
+  { name: "Serbia", code: "+381", flag: "https://flagcdn.com/w20/rs.png" },
+  { name: "Seychelles", code: "+248", flag: "https://flagcdn.com/w20/sc.png" },
+  { name: "Sierra Leone", code: "+232", flag: "https://flagcdn.com/w20/sl.png" },
+  { name: "Singapore", code: "+65", flag: "https://flagcdn.com/w20/sg.png" },
+  { name: "Slovakia", code: "+421", flag: "https://flagcdn.com/w20/sk.png" },
+  { name: "Slovenia", code: "+386", flag: "https://flagcdn.com/w20/si.png" },
+  { name: "Solomon Islands", code: "+677", flag: "https://flagcdn.com/w20/sb.png" },
+  { name: "Somalia", code: "+252", flag: "https://flagcdn.com/w20/so.png" },
+  { name: "South Africa", code: "+27", flag: "https://flagcdn.com/w20/za.png" },
+  { name: "South Korea", code: "+82", flag: "https://flagcdn.com/w20/kr.png" },
+  { name: "South Sudan", code: "+211", flag: "https://flagcdn.com/w20/ss.png" },
+  { name: "Spain", code: "+34", flag: "https://flagcdn.com/w20/es.png" },
+  { name: "Sri Lanka", code: "+94", flag: "https://flagcdn.com/w20/lk.png" },
+  { name: "Sudan", code: "+249", flag: "https://flagcdn.com/w20/sd.png" },
+  { name: "Suriname", code: "+597", flag: "https://flagcdn.com/w20/sr.png" },
+  { name: "Sweden", code: "+46", flag: "https://flagcdn.com/w20/se.png" },
+  { name: "Switzerland", code: "+41", flag: "https://flagcdn.com/w20/ch.png" },
+  { name: "Syria", code: "+963", flag: "https://flagcdn.com/w20/sy.png" },
+  { name: "Taiwan", code: "+886", flag: "https://flagcdn.com/w20/tw.png" },
+  { name: "Tajikistan", code: "+992", flag: "https://flagcdn.com/w20/tj.png" },
+  { name: "Tanzania", code: "+255", flag: "https://flagcdn.com/w20/tz.png" },
+  { name: "Thailand", code: "+66", flag: "https://flagcdn.com/w20/th.png" },
+  { name: "Timor-Leste", code: "+670", flag: "https://flagcdn.com/w20/tl.png" },
+  { name: "Togo", code: "+228", flag: "https://flagcdn.com/w20/tg.png" },
+  { name: "Tonga", code: "+676", flag: "https://flagcdn.com/w20/to.png" },
+  { name: "Trinidad and Tobago", code: "+1", flag: "https://flagcdn.com/w20/tt.png" },
+  { name: "Tunisia", code: "+216", flag: "https://flagcdn.com/w20/tn.png" },
+  { name: "Turkey", code: "+90", flag: "https://flagcdn.com/w20/tr.png" },
+  { name: "Turkmenistan", code: "+993", flag: "https://flagcdn.com/w20/tm.png" },
+  { name: "Uganda", code: "+256", flag: "https://flagcdn.com/w20/ug.png" },
+  { name: "Ukraine", code: "+380", flag: "https://flagcdn.com/w20/ua.png" },
+  { name: "United Arab Emirates", code: "+971", flag: "https://flagcdn.com/w20/ae.png" },
+  { name: "United Kingdom", code: "+44", flag: "https://flagcdn.com/w20/gb.png" },
+  { name: "United States", code: "+1", flag: "https://flagcdn.com/w20/us.png" },
+  { name: "Uruguay", code: "+598", flag: "https://flagcdn.com/w20/uy.png" },
+  { name: "Uzbekistan", code: "+998", flag: "https://flagcdn.com/w20/uz.png" },
+  { name: "Vanuatu", code: "+678", flag: "https://flagcdn.com/w20/vu.png" },
+  { name: "Vatican City", code: "+379", flag: "https://flagcdn.com/w20/va.png" },
+  { name: "Venezuela", code: "+58", flag: "https://flagcdn.com/w20/ve.png" },
+  { name: "Vietnam", code: "+84", flag: "https://flagcdn.com/w20/vn.png" },
+  { name: "Yemen", code: "+967", flag: "https://flagcdn.com/w20/ye.png" },
+  { name: "Zambia", code: "+260", flag: "https://flagcdn.com/w20/zm.png" },
+  { name: "Zimbabwe", code: "+263", flag: "https://flagcdn.com/w20/zw.png" }
+];
 
 export default function AuthForm() {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
   const [activeTab, setActiveTab] = useState("login");
-  const [countries, setCountries] = useState([]);
-  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [countries] = useState(countriesList); // Static list
+  const [selectedCountry, setSelectedCountry] = useState(
+    countriesList.find((c) => c.name === "Kenya") || countriesList[0]
+  );
   const [openDropdown, setOpenDropdown] = useState(false);
 
   const [loginForm, setLoginForm] = useState({
@@ -26,57 +218,6 @@ export default function AuthForm() {
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
-  /* ---------------- FETCH COUNTRIES ---------------- */
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const res = await fetch(
-          "https://restcountries.com/v3.1/all?fields=name,idd,flags"
-        );
-        const data = await res.json();
-
-        const formatted = data
-          .map((c) => {
-            if (!c.idd?.root || !c.idd?.suffixes) return null;
-            return {
-              name: c.name.common,
-              code: c.idd.root + c.idd.suffixes[0],
-              flag: c.flags.png,
-            };
-          })
-          .filter(Boolean)
-          .sort((a, b) => a.name.localeCompare(b.name));
-
-        setCountries(formatted);
-        setSelectedCountry(
-          formatted.find((c) => c.name === "Kenya") || formatted[0]
-        );
-      } catch {
-        const fallback = [
-          {
-            name: "Kenya",
-            code: "+254",
-            flag: "https://flagcdn.com/w20/ke.png",
-          },
-          {
-            name: "United States",
-            code: "+1",
-            flag: "https://flagcdn.com/w20/us.png",
-          },
-          {
-            name: "United Kingdom",
-            code: "+44",
-            flag: "https://flagcdn.com/w20/gb.png",
-          },
-        ];
-        setCountries(fallback);
-        setSelectedCountry(fallback[0]);
-      }
-    };
-
-    fetchCountries();
-  }, []);
 
   /* ---------------- CLOSE DROPDOWN ON OUTSIDE CLICK ---------------- */
   useEffect(() => {
