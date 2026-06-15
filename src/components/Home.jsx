@@ -32,7 +32,7 @@ export default function Home() {
     <div className="bg-slate-900 text-white">
       {/* NAVBAR */}
       <header className="flex items-center justify-between px-8 py-5 border-b border-slate-800">
-        <h1 className="text-2xl font-bold text-blue-400">Eccoearn</h1>
+        <h1 className="text-2xl font-bold text-blue-400">Flexbit</h1>
         <div className="space-x-6">
           <button
             onClick={() => navigate("/auth")}
@@ -166,7 +166,7 @@ export default function Home() {
 
       {/* ABOUT */}
       <section className="px-8 py-24 text-center bg-slate-900">
-        <h2 className="text-4xl font-bold mb-6">Why Choose Eccoearn?</h2>
+        <h2 className="text-4xl font-bold mb-6">Why Choose Flexbit?</h2>
         <p className="text-gray-400 max-w-3xl mx-auto mb-12">
           Experience the ultimate trading platform with cutting-edge features
           designed for your success.
@@ -202,7 +202,7 @@ export default function Home() {
       <section className="text-center py-20 bg-slate-950">
         <h2 className="text-4xl font-bold mb-6">Ready to Start Trading?</h2>
         <p className="mb-10">
-          Join thousands of traders multiplying their portfolios with Eccoearn.
+          Join thousands of traders multiplying their portfolios with Flexbit.
         </p>
         <div className="space-x-4">
           <button
@@ -222,7 +222,7 @@ export default function Home() {
 
       {/* FOOTER */}
       <footer className="text-center py-6 text-gray-400 border-t border-slate-800 bg-slate-900">
-        © 2020 Eccoearn. All rights reserved.
+        © 2020 Flexbit. All rights reserved.
       </footer>
     </div>
   );
