@@ -8,7 +8,10 @@ const API_URL = import.meta.env.VITE_API_URL;
 function Withdraw() {
   const [method, setMethod] = useState("crypto");
   const [selectedCrypto, setSelectedCrypto] = useState("bitcoin");
-  const [amount, setAmount] = useState(0);
+
+  // CHANGED: Empty string instead of 0
+  const [amount, setAmount] = useState("");
+
   const [walletAddress, setWalletAddress] = useState("");
   const [mpesaNumber, setMpesaNumber] = useState("");
   const [bankDetails, setBankDetails] = useState({
@@ -27,23 +30,47 @@ function Withdraw() {
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
     setUser(storedUser);
+
     if (storedUser.balance?.balance) {
-      setAvailableBalance(storedUser.balance.balance);
+      setAvailableBalance(Number(storedUser.balance.balance));
     }
   }, []);
 
   const cryptoOptions = [
-    { id: "bitcoin", name: "Bitcoin", icon: <FaBitcoin size={28} />, color: "#F7931A" },
-    { id: "usdt", name: "USDT (TRC20)", icon: <SiTether size={28} />, color: "#26A17B" },
-    { id: "ethereum", name: "Ethereum", icon: <FaEthereum size={28} />, color: "#3C3C3D" },
+    {
+      id: "bitcoin",
+      name: "Bitcoin",
+      icon: <FaBitcoin size={28} />,
+      color: "#F7931A",
+    },
+    {
+      id: "usdt",
+      name: "USDT (TRC20)",
+      icon: <SiTether size={28} />,
+      color: "#26A17B",
+    },
+    {
+      id: "ethereum",
+      name: "Ethereum",
+      icon: <FaEthereum size={28} />,
+      color: "#3C3C3D",
+    },
   ];
 
   /* ================= VALIDATION ================= */
 
   const validateAmount = () => {
-    if (availableBalance < 50) return "Minimum balance of $50 required.";
-    if (!amount || amount <= 0) return "Enter valid withdrawal amount.";
-    if (amount > availableBalance) return "Insufficient balance.";
+    const withdrawalAmount = Number(amount);
+
+    if (availableBalance < 50)
+      return "Minimum balance of $50 required.";
+
+    if (!withdrawalAmount || withdrawalAmount <= 0)
+      return "Enter valid withdrawal amount.";
+
+    if (withdrawalAmount > availableBalance)
+      return "Insufficient balance.";
+
     return "";
   };
 
@@ -56,44 +83,71 @@ function Withdraw() {
     setSuccess(false);
 
     const amountError = validateAmount();
+
     if (amountError) return setError(amountError);
 
-    if (method === "crypto" && !walletAddress) {
+    if (method === "crypto" && !walletAddress.trim()) {
       return setError("Enter wallet address.");
     }
 
-    if (method === "mpesa" && !mpesaNumber) {
+    if (method === "mpesa" && !mpesaNumber.trim()) {
       return setError("Enter M-Pesa phone number.");
     }
 
-    if (method === "bank" && (!bankDetails.bankName || !bankDetails.accountNumber)) {
+    if (
+      method === "bank" &&
+      (!bankDetails.bankName.trim() ||
+        !bankDetails.accountNumber.trim())
+    ) {
       return setError("Complete bank details.");
     }
+
+    const withdrawalAmount = Number(amount);
 
     setProcessing(true);
 
     try {
       const res = await fetch(`${API_URL}/users/${user.id}/balance`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: (-amount).toString() }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: (-withdrawalAmount).toString(),
+        }),
       });
 
       if (!res.ok) throw new Error();
 
-      const newBalance = availableBalance - amount;
+      const newBalance = availableBalance - withdrawalAmount;
+
       setAvailableBalance(newBalance);
 
       const updatedUser = {
         ...user,
-        balance: { ...user.balance, balance: newBalance },
+        balance: {
+          ...user.balance,
+          balance: newBalance,
+        },
       };
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      setUser(updatedUser);
+
       setSuccess(true);
-      setAmount(0);
+
+      // CHANGED: Reset to empty string
+      setAmount("");
       setWalletAddress("");
       setMpesaNumber("");
+
+      setBankDetails({
+        bankName: "",
+        accountNumber: "",
+        accountName: "",
+        swift: "",
+      });
     } catch {
       setError("Withdrawal failed. Try again.");
     } finally {
@@ -109,8 +163,12 @@ function Withdraw() {
 
       {/* Balance */}
       <div className="mt-5 bg-blue-800 rounded-xl p-4 text-center">
-        <p className="text-2xl font-bold">${availableBalance.toFixed(2)}</p>
-        <p className="text-sm text-blue-200">Available Balance</p>
+        <p className="text-2xl font-bold">
+          ${availableBalance.toFixed(2)}
+        </p>
+        <p className="text-sm text-blue-200">
+          Available Balance
+        </p>
       </div>
 
       {/* Method Tabs */}
@@ -120,7 +178,9 @@ function Withdraw() {
             key={m}
             onClick={() => setMethod(m)}
             className={`flex-1 py-2 rounded-lg ${
-              method === m ? "bg-blue-600" : "bg-blue-800"
+              method === m
+                ? "bg-blue-600"
+                : "bg-blue-800"
             }`}
           >
             {m.toUpperCase()}
@@ -135,38 +195,51 @@ function Withdraw() {
             {cryptoOptions.map((crypto) => (
               <div
                 key={crypto.id}
-                onClick={() => setSelectedCrypto(crypto.id)}
+                onClick={() =>
+                  setSelectedCrypto(crypto.id)
+                }
                 className={`cursor-pointer rounded-xl p-4 text-center border ${
                   selectedCrypto === crypto.id
                     ? "border-blue-400 bg-blue-800"
                     : "border-blue-700"
                 }`}
               >
-                <div style={{ color: crypto.color }}>{crypto.icon}</div>
-                <div className="text-sm">{crypto.name}</div>
+                <div style={{ color: crypto.color }}>
+                  {crypto.icon}
+                </div>
+                <div className="text-sm">
+                  {crypto.name}
+                </div>
               </div>
             ))}
           </div>
 
-          {/* Amount */}
           <div>
-            <label className="text-sm text-blue-200">Amount (USD)</label>
+            <label className="text-sm text-blue-200">
+              Amount (USD)
+            </label>
             <input
               type="number"
               value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
+              onChange={(e) =>
+                setAmount(e.target.value)
+              }
+              placeholder="Enter amount"
               className="w-full mt-1 px-4 py-2 rounded-lg bg-blue-800 border border-blue-700"
               disabled={processing}
             />
           </div>
 
-          {/* Wallet */}
           <div>
-            <label className="text-sm text-blue-200">Your Wallet Address</label>
+            <label className="text-sm text-blue-200">
+              Your Wallet Address
+            </label>
             <textarea
               rows={3}
               value={walletAddress}
-              onChange={(e) => setWalletAddress(e.target.value)}
+              onChange={(e) =>
+                setWalletAddress(e.target.value)
+              }
               placeholder="Enter your wallet address"
               className="w-full mt-1 px-3 py-2 rounded-lg bg-black text-white text-sm break-all"
             />
@@ -177,13 +250,17 @@ function Withdraw() {
       {/* ================= BANK ================= */}
       {method === "bank" && (
         <div className="mt-5 space-y-3">
-          {/* Amount */}
           <div>
-            <label className="text-sm text-blue-200">Amount (USD)</label>
+            <label className="text-sm text-blue-200">
+              Amount (USD)
+            </label>
             <input
               type="number"
               value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
+              onChange={(e) =>
+                setAmount(e.target.value)
+              }
+              placeholder="Enter amount"
               className="w-full mt-1 px-4 py-2 rounded-lg bg-blue-800 border border-blue-700"
               disabled={processing}
             />
@@ -192,8 +269,12 @@ function Withdraw() {
           <input
             type="text"
             placeholder="Bank Name"
+            value={bankDetails.bankName}
             onChange={(e) =>
-              setBankDetails({ ...bankDetails, bankName: e.target.value })
+              setBankDetails({
+                ...bankDetails,
+                bankName: e.target.value,
+              })
             }
             className="w-full px-4 py-2 rounded-lg bg-blue-800 border border-blue-700"
           />
@@ -201,8 +282,12 @@ function Withdraw() {
           <input
             type="text"
             placeholder="Account Number"
+            value={bankDetails.accountNumber}
             onChange={(e) =>
-              setBankDetails({ ...bankDetails, accountNumber: e.target.value })
+              setBankDetails({
+                ...bankDetails,
+                accountNumber: e.target.value,
+              })
             }
             className="w-full px-4 py-2 rounded-lg bg-blue-800 border border-blue-700"
           />
@@ -210,8 +295,12 @@ function Withdraw() {
           <input
             type="text"
             placeholder="Account Holder Name"
+            value={bankDetails.accountName}
             onChange={(e) =>
-              setBankDetails({ ...bankDetails, accountName: e.target.value })
+              setBankDetails({
+                ...bankDetails,
+                accountName: e.target.value,
+              })
             }
             className="w-full px-4 py-2 rounded-lg bg-blue-800 border border-blue-700"
           />
@@ -221,13 +310,17 @@ function Withdraw() {
       {/* ================= MPESA ================= */}
       {method === "mpesa" && (
         <div className="mt-5 space-y-3">
-          {/* Amount */}
           <div>
-            <label className="text-sm text-blue-200">Amount (USD)</label>
+            <label className="text-sm text-blue-200">
+              Amount (USD)
+            </label>
             <input
               type="number"
               value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
+              onChange={(e) =>
+                setAmount(e.target.value)
+              }
+              placeholder="Enter amount"
               className="w-full mt-1 px-4 py-2 rounded-lg bg-blue-800 border border-blue-700"
               disabled={processing}
             />
@@ -237,21 +330,26 @@ function Withdraw() {
             type="text"
             placeholder="M-Pesa Phone Number (07XXXXXXXX)"
             value={mpesaNumber}
-            onChange={(e) => setMpesaNumber(e.target.value)}
+            onChange={(e) =>
+              setMpesaNumber(e.target.value)
+            }
             className="w-full px-4 py-2 rounded-lg bg-blue-800 border border-blue-700"
           />
         </div>
       )}
 
-      {/* ERROR / SUCCESS */}
-      {error && <p className="text-red-400 mt-3 text-sm">{error}</p>}
+      {error && (
+        <p className="text-red-400 mt-3 text-sm">
+          {error}
+        </p>
+      )}
+
       {success && (
         <p className="text-green-400 mt-3 text-sm">
           Withdrawal Successful!
         </p>
       )}
 
-      {/* BUTTON */}
       <button
         onClick={handleWithdraw}
         disabled={isDisabled}
