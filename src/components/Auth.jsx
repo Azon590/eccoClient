@@ -199,7 +199,7 @@ export default function AuthForm() {
   const [activeTab, setActiveTab] = useState("login");
   const [countries] = useState(countriesList); // Static list
   const [selectedCountry, setSelectedCountry] = useState(
-    countriesList.find((c) => c.name === "Kenya") || countriesList[0]
+    countriesList.find((c) => c.name === "United States") || countriesList[0]
   );
   const [openDropdown, setOpenDropdown] = useState(false);
 
